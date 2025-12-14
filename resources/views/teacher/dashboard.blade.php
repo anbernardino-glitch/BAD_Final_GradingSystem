@@ -96,7 +96,13 @@
                             <tbody>
                                 @foreach($subject->students as $student)
                                 @php
-                                    $grade = $student->grades->where('subject_id', $subject->id)->first();
+                                    $selectedTerm = old('term', '1st Term');
+
+$grade = $student->grades
+    ->where('subject_id', $subject->id)
+    ->where('term', $selectedTerm)
+    ->first();
+
                                     $quizzes = $grade ? json_decode($grade->quiz, true) ?? [] : [];
                                     $projects = $grade ? json_decode($grade->project, true) ?? [] : [];
                                     $exams = $grade ? json_decode($grade->exam, true) ?? [] : [];

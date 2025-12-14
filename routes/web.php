@@ -80,7 +80,10 @@ Route::get('/department/dashboard', [DepartmentController::class, 'dashboard'])
 Route::post('/logout/department', [AuthController::class, 'departmentLogout'])
     ->name('department.logout');
     Route::post('/department/grade/{grade}/approve', [DepartmentController::class, 'approveGrade'])->name('department.approve');
-Route::post('/department/grade/{grade}/request-revision', [DepartmentController::class, 'requestRevision'])->name('department.requestRevision');
+    Route::post('student/department/grade/{grade}/request-revision', [DepartmentController::class, 'requestRevision'])
+    ->name('department.requestRevision');
+
+//Route::post('/department/grade/{grade}/request-revision', [DepartmentController::class, 'requestRevision'])->name('department.requestRevision');
 Route::get('/department/subject/{subject}/report', [DepartmentController::class, 'generateReport'])
     ->name('department.report');
 

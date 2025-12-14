@@ -163,36 +163,63 @@ class TeacherController extends Controller
 
     // SAVE GRADES WITH TERM INCLUDED
     public function submitGrades(Request $request, $subjectId)
-    {
-        $gradesData = $request->input('grades', []);
-        $term = $request->input('term'); // GET TERM
+{
+    $term = $request->input('term');
+    $gradesData = $request->input('grades', []);
 
-        foreach ($gradesData as $studentId => $gradeParts) {
+    foreach ($gradesData as $studentId => $parts) {
 
-            $quizAvg = !empty($gradeParts['quiz']) ? array_sum($gradeParts['quiz']) / count($gradeParts['quiz']) : 0;
-            $projectAvg = !empty($gradeParts['project']) ? array_sum($gradeParts['project']) / count($gradeParts['project']) : 0;
-            $examAvg = !empty($gradeParts['exam']) ? array_sum($gradeParts['exam']) / count($gradeParts['exam']) : 0;
-
-            $finalGrade = $quizAvg * 0.3 + $projectAvg * 0.3 + $examAvg * 0.4;
-
-            Grade::updateOrCreate(
-                [
-                    'student_id' => $studentId,
-                    'subject_id' => $subjectId,
-                    'term' => $term,   // SAVE TERM
-                ],
-                [
-                    'quiz' => json_encode($gradeParts['quiz'] ?? []),
-                    'project' => json_encode($gradeParts['project'] ?? []),
-                    'exam' => json_encode($gradeParts['exam'] ?? []),
-                    'final' => $finalGrade,
-                    'status' => 'submitted',
-                ]
-            );
+        // Skip empty rows
+        if (
+            empty($parts['quiz']) &&
+            empty($parts['project']) &&
+            empty($parts['exam'])
+        ) {
+            continue;
         }
 
-        return back()->with('success','Grades submitted for approval successfully.');
+        // Get existing grade (important!)
+        $existingGrade = Grade::where([
+            'student_id' => $studentId,
+            'subject_id' => $subjectId,
+            'term'       => $term,
+        ])->first();
+
+        // If already submitted and no revision → DO NOT TOUCH
+        if ($existingGrade && $existingGrade->status === 'submitted') {
+            continue;
+        }
+
+        $final = $this->calculateFinal($parts);
+
+        Grade::updateOrCreate(
+            [
+                'student_id' => $studentId,
+                'subject_id' => $subjectId,
+                'term'       => $term,
+            ],
+            [
+                'quiz'    => isset($parts['quiz'])
+                    ? json_encode($parts['quiz'])
+                    : ($existingGrade->quiz ?? '[]'),
+
+                'project' => isset($parts['project'])
+                    ? json_encode($parts['project'])
+                    : ($existingGrade->project ?? '[]'),
+
+                'exam'    => isset($parts['exam'])
+                    ? json_encode($parts['exam'])
+                    : ($existingGrade->exam ?? '[]'),
+
+                'final'  => $final,
+                'status' => 'submitted',
+            ]
+        );
     }
+
+    return back()->with('success','Grades submitted and locked.');
+}
+
 
     private function calculateFinal($grades)
     {

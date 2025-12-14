@@ -30,16 +30,24 @@ class DepartmentController extends Controller
         return redirect()->back()->with('success', 'Grade approved successfully.');
     }
 
-    public function requestRevision(Request $request, Grade $grade)
+   public function requestRevision(Request $request, $gradeId)
     {
-        $request->validate(['reason' => 'required|string']);
+        $request->validate([
+            'justification' => 'required|string|max:500',
+        ]);
+
+        $grade = Grade::findOrFail($gradeId);
+
+        if ($grade->status !== 'submitted') {
+            return back()->with('error', 'Only submitted grades can be requested for revision.');
+        }
+
         $grade->status = 'revision_requested';
-        $grade->revision_reason = $request->reason;
+        $grade->justification = $request->justification; // make sure column exists in DB
         $grade->save();
 
-        return redirect()->back()->with('success', 'Revision requested successfully.');
+        return back()->with('success', 'Revision requested. Teacher can now edit this grade.');
     }
-
     public function generateReport($subjectId)
 {
     $subject = Subject::with('grades.student')->findOrFail($subjectId);
