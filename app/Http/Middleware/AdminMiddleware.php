@@ -9,7 +9,7 @@ class AdminMiddleware
 {
     public function handle($request, Closure $next)
     {
-        // Check if user is logged in AND has admin role
+     
         if (!Auth::check() || Auth::user()->role !== 'admin') {
             return redirect('/login')->with('error', 'Unauthorized access.');
         }
