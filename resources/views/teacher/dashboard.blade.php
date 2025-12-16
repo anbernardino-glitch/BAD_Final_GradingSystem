@@ -260,39 +260,57 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', function() {
+    function updateFinal(row) {
+        let quizzes = Array.from(row.querySelectorAll('.quizzes input')).map(i => parseFloat(i.value)||0);
+        let projects = Array.from(row.querySelectorAll('.projects input')).map(i => parseFloat(i.value)||0);
+        let exams = Array.from(row.querySelectorAll('.exams input')).map(i => parseFloat(i.value)||0);
 
-    const computeFinal = row => {
-        const avg = selector => {
-            const inputs = Array.from(row.querySelectorAll(selector)).map(i => parseFloat(i.value) || 0);
-            return inputs.length ? inputs.reduce((a, b) => a + b, 0) / inputs.length : 0;
-        };
-        const final = avg('.quizzes input') * 0.3 + avg('.projects input') * 0.3 + avg('.exams input') * 0.4;
+        let final = 0;
+        if(quizzes.length) final += quizzes.reduce((a,b)=>a+b,0)/quizzes.length * 0.3;
+        if(projects.length) final += projects.reduce((a,b)=>a+b,0)/projects.length * 0.3;
+        if(exams.length) final += exams.reduce((a,b)=>a+b,0)/exams.length * 0.4;
+
         row.querySelector('.final-grade').value = final.toFixed(2);
-    };
+    }
 
-    document.querySelectorAll('tr[data-student-id]').forEach(row => {
-        row.addEventListener('input', () => computeFinal(row));
-        computeFinal(row);
+    document.querySelectorAll('tr[data-student-id]').forEach(row=>{
+        row.addEventListener('input',()=>updateFinal(row));
+        updateFinal(row);
 
-        ['quiz', 'project', 'exam'].forEach(type => {
-            const btn = row.querySelector(`.add-${type}`);
-            if (!btn) return;
-            btn.addEventListener('click', () => {
-                const input = document.createElement('input');
-                input.type = 'number';
-                input.name = `grades[${row.dataset.studentId}][${type}][]`;
-                input.min = 0;
-                input.max = 100;
-                input.className = 'form-control form-control-sm mb-1 score-input';
-                input.addEventListener('input', () => computeFinal(row));
-                row.querySelector(`.${type}s`).insertBefore(input, btn);
-            });
+        row.querySelector('.add-quiz')?.addEventListener('click',()=>{
+            let input=document.createElement('input');
+            input.type='number';
+            input.name=`grades[${row.dataset.studentId}][quiz][]`;
+            input.className='form-control form-control-sm mb-1 score-input';
+            input.min=0; input.max=100;
+            input.addEventListener('input',()=>updateFinal(row));
+            row.querySelector('.quizzes').insertBefore(input,row.querySelector('.add-quiz'));
+        });
+
+        row.querySelector('.add-project')?.addEventListener('click',()=>{
+            let input=document.createElement('input');
+            input.type='number';
+            input.name=`grades[${row.dataset.studentId}][project][]`;
+            input.className='form-control form-control-sm mb-1 score-input';
+            input.min=0; input.max=100;
+            input.addEventListener('input',()=>updateFinal(row));
+            row.querySelector('.projects').insertBefore(input,row.querySelector('.add-project'));
+        });
+
+        row.querySelector('.add-exam')?.addEventListener('click',()=>{
+            let input=document.createElement('input');
+            input.type='number';
+            input.name=`grades[${row.dataset.studentId}][exam][]`;
+            input.className='form-control form-control-sm mb-1 score-input';
+            input.min=0; input.max=100;
+            input.addEventListener('input',()=>updateFinal(row));
+            row.querySelector('.exams').insertBefore(input,row.querySelector('.add-exam'));
         });
     });
-
 });
 </script>
+
 
 
 </body>
